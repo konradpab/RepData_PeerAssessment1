@@ -1,0 +1,105 @@
+---
+title: "Week 3 Project Reproducible research"
+author: "Konrad Pabianczyk"
+date: "11/5/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r message = FALSE, warning=FALSE}
+# Load and process data
+#install.packages('dplyr')
+
+library(lattice) 
+library(dplyr)
+library(magrittr)
+```
+
+```{r}
+# loading dataset
+df <- read.csv(file="activity.csv")
+
+# Take the summary, mean and median of unprocessed data 
+
+df_summary = df %>%
+  group_by(date) %>%
+  summarise(
+    sum_steps = sum(steps, na.rm =  TRUE),
+    mean_steps = mean(steps, na.rm =  TRUE),
+    median_steps = median(steps, na.rm =  TRUE))
+
+# Histogram
+hist(df_summary$sum_steps)
+
+# Histogram with breaks for increased visibility
+
+hist(df_summary$sum_steps, breaks = 30)
+
+# display results
+
+print(df_summary)
+
+# Time series for intervals
+
+df_summary_interval = df %>%
+  group_by(interval) %>%
+  summarise(
+    total_steps = sum(steps, na.rm = TRUE),
+    mean_steps = mean(steps, na.rm =  TRUE))
+
+plot(df_summary_interval$interval, df_summary_interval$mean_steps, type = "l", xaxt = "n")
+axis(side = 1, 
+     at = c(0, 400, 800, 1200, 1600, 2000, 2400),
+     labels = c("00:00", "4:00", "8:00", "12:00","16:00","20:00","24:00" ))
+
+# Max steps
+
+max_step = which.max(df_summary_interval$total_steps) %>% df_summary_interval$interval[.]
+print(max_step)
+
+# Calculate and print # of NA's
+
+number_NA = is.na(df$steps) %>% sum
+print(number_NA)
+
+# Create a new dataset and that is a duplicate of df but replacing MA with the average number of steps
+
+df_wo_na <- df
+df_wo_na[is.na(df$steps), ]$steps <- mean(df$steps,na.rm = TRUE)
+
+# Take the summary, mean and median of processed data 
+
+df_wo_na_summary = df_wo_na %>%
+  group_by(date) %>%
+  summarise(
+    sum_steps = sum(steps, na.rm =  TRUE),
+    mean_steps = mean(steps, na.rm =  TRUE),
+    median_steps = median(steps, na.rm =  TRUE))
+
+# Histogram
+hist(df_wo_na_summary$sum_steps)
+
+# Histogram with breaks for increased visibility
+
+hist(df_wo_na_summary$sum_steps, breaks = 30)
+
+# display results
+
+print(df_wo_na_summary)
+
+#Extract weekends from weekdays
+
+# display results
+
+df_wo_na$day_of_week = ifelse(as.POSIXlt(as.Date(df_wo_na$date, format = "%Y-%m-%d"))$wday %in% 6:7, "weekend", "weekday")
+
+# kernel density plots by factor level 
+xyplot(df_wo_na$steps~df_wo_na$interval|df_wo_na$day_of_week, 
+            main="Time Series Plot by day of week",
+            xlab="interval",
+            ylab="Steps",
+            layout=c(1, 2),
+       type='l')
+```
