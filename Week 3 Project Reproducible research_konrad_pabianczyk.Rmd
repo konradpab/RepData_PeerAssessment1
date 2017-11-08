@@ -2,7 +2,7 @@
 title: "Week 3 Project Reproducible research"
 author: "Konrad Pabianczyk"
 date: "11/5/2017"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
